@@ -1,33 +1,19 @@
-import { StyleSheet } from 'react-native';
+import { createStackNavigator } from "@react-navigation/stack";
+import React from "react";
+import TaskDetails from "../screen/taskDetails";
+import TasksScreen from "../screen/taskScreen";
 
-import { SafeAreaView } from 'react-native-safe-area-context';
-import TasksScreen from '../screen/taskScreen';
+const Stack = createStackNavigator();
+export type RootStackParamList = {
+  Home: undefined;
+  TaskDetails: { taskId: string };
+};
 
-export default function HomeScreen() {
+export default function HomeNavigator() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <TasksScreen />
-    </SafeAreaView>
-
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={TasksScreen} />
+      <Stack.Screen name="TaskDetails" component={TaskDetails} />
+    </Stack.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
-  

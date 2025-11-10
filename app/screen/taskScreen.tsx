@@ -1,3 +1,5 @@
+import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   FlatList,
@@ -10,8 +12,13 @@ import {
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { RootStackParamList } from "../(tabs)";
 import type { RootState } from "../../store";
-import { addTask } from "../../store/tasksSlice";
+import {
+  addTask,
+  toggleCheckbox,
+  toggleHighlight,
+} from "../../store/tasksSlice";
 import FloatingButton from "../components/FloatingButton";
 import TaskItem from "../components/taskItem";
 import colors from "../style/colors";
@@ -19,9 +26,14 @@ import colors from "../style/colors";
 export default function TasksScreen() {
   const [showInput, setShowInput] = useState(false);
   const [task, setTask] = useState("");
+
+  type NavigationProp = StackNavigationProp<RootStackParamList, "Home">;
   const dispatch = useDispatch();
   const tasks = useSelector((state: RootState) => state.tasks.tasks);
+
   const inputRef = useRef<TextInput>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const navigation = useNavigation<NavigationProp>();
 
   const openKeyboard = () => {
     setShowInput(true);
@@ -37,6 +49,22 @@ export default function TasksScreen() {
     setShowInput(false);
   };
 
+  const handleSelectTask = (id: string) => {
+    setSelectedTaskId(selectedTaskId === id ? null : id);
+  };
+
+  const handleHighlightTask = (id: string) => {
+    dispatch(toggleHighlight(id));
+  };
+
+  const handleCheckboxTask = (id: string) => {
+    dispatch(toggleCheckbox(id));
+  };
+
+  const openTaskDetails = (id: string) => {
+    navigation.navigate("TaskDetails", { taskId: id });
+  };
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior="height">
       <Text style={styles.header}>Tasks</Text>
@@ -45,7 +73,17 @@ export default function TasksScreen() {
         data={tasks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TaskItem title={item.title} date={item.date} />
+          <TaskItem
+            title={item.title}
+            date={item.date}
+            selected={selectedTaskId === item.id}
+            important={item.highlight}
+            onPress={() => handleSelectTask(item.id)}
+            onHighlight={() => handleHighlightTask(item.id)}
+            onCheckboxClick={() => handleCheckboxTask(item.id)}
+            checked={item.checkbox}
+            onOpenDetails={() => openTaskDetails(item.id)}
+          />
         )}
         contentContainerStyle={{ paddingBottom: 100 }}
       />
