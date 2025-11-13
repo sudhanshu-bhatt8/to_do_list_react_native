@@ -73,6 +73,15 @@ const tasksSlice = createSlice({
       }
     },
 
+    editTaskTitle: (
+      state,
+      action: PayloadAction<{ taskId: string; title: string }>
+    ) => {
+      const { taskId, title } = action.payload;
+      const task = state.tasks.find((t) => t.id === taskId);
+      if (task) task.title = title;
+    },
+
     toggleStepCheck: (
       state,
       action: PayloadAction<{ taskId: string; stepId: number }>
@@ -97,6 +106,47 @@ const tasksSlice = createSlice({
           : s
       );
     },
+
+    deleteStep: (
+      state,
+      action: PayloadAction<{ taskId: string; stepId: number }>
+    ) => {
+      const { taskId, stepId } = action.payload;
+      const task = state.tasks.find((t) => t.id === taskId);
+
+      if (!task || !task.steps) return;
+
+      // remove the step
+      task.steps = task.steps.filter((s) => s.id !== stepId);
+    },
+
+    promoteStepToTask: (
+      state,
+      action: PayloadAction<{ taskId: string; stepId: number }>
+    ) => {
+      const { taskId, stepId } = action.payload;
+
+      const task = state.tasks.find((t) => t.id === taskId);
+      if (!task || !task.steps) return;
+
+      const step = task.steps.find((s) => s.id === stepId);
+      if (!step) return;
+
+      // Create a new task from the step
+      const newTaskId = (state.tasks.length + 1).toString();
+
+      state.tasks.push({
+        id: newTaskId,
+        title: step.title,
+        date: new Date().toLocaleDateString(),
+        highlight: false,
+        checkbox: false,
+        steps: [],
+      });
+
+      // Remove from the old task
+      task.steps = task.steps.filter((s) => s.id !== stepId);
+    },
   },
 });
 
@@ -107,5 +157,8 @@ export const {
   addStep,
   editStepTitle,
   toggleStepCheck,
+  promoteStepToTask,
+  deleteStep,
+  editTaskTitle,
 } = tasksSlice.actions;
 export default tasksSlice.reducer;
