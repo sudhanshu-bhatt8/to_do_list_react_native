@@ -72,9 +72,40 @@ const tasksSlice = createSlice({
         task.steps.push(newStep);
       }
     },
+
+    toggleStepCheck: (
+      state,
+      action: PayloadAction<{ taskId: string; stepId: number }>
+    ) => {
+      const task = state.tasks.find((t) => t.id === action.payload.taskId);
+      if (!task || !task.steps) return;
+      const step = task.steps.find((s) => s.id === action.payload.stepId);
+      if (step) step.checked = !step.checked;
+    },
+
+    editStepTitle: (
+      state,
+      action: PayloadAction<{ taskId: string; stepId: number; title: string }>
+    ) => {
+      const task = state.tasks.find((t) => t.id === action.payload.taskId);
+      if (!task || !task.steps) return;
+
+      // ✅ new array reference → triggers React re-render
+      task.steps = task.steps.map((s) =>
+        s.id === action.payload.stepId
+          ? { ...s, title: action.payload.title }
+          : s
+      );
+    },
   },
 });
 
-export const { addTask, toggleHighlight, toggleCheckbox, addStep } =
-  tasksSlice.actions;
+export const {
+  addTask,
+  toggleHighlight,
+  toggleCheckbox,
+  addStep,
+  editStepTitle,
+  toggleStepCheck,
+} = tasksSlice.actions;
 export default tasksSlice.reducer;

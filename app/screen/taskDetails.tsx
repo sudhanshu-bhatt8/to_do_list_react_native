@@ -1,19 +1,98 @@
 import { RootState } from "@/store";
-import { addStep } from "@/store/tasksSlice";
+import { addStep, editStepTitle, toggleStepCheck } from "@/store/tasksSlice";
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import Checkbox from "expo-checkbox";
 import { useNavigation } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import colors from "../style/colors";
+
+type Step = {
+  id: number;
+  title: string;
+  checked: boolean;
+};
+
+type StepRowProps = {
+  item: Step;
+  taskId: string;
+  dispatch: any;
+};
+
+// flicker-free StepRow
+const StepRow = ({ item, taskId, dispatch }: StepRowProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localText, setLocalText] = useState(item.title);
+
+  // ✅ Keep localText synced with Redux
+  useEffect(() => {
+    if (!isEditing) setLocalText(item.title);
+  }, [item.title, isEditing]);
+
+  const handleBlur = useCallback(() => {
+    const trimmed = localText.trim();
+    if (trimmed && trimmed !== item.title) {
+      dispatch(editStepTitle({ taskId, stepId: item.id, title: trimmed }));
+      setLocalText(trimmed);
+    }
+    setIsEditing(false);
+  }, [localText, item.title, item.id, taskId, dispatch]);
+
+  const handleToggle = useCallback(() => {
+    dispatch(toggleStepCheck({ taskId, stepId: item.id }));
+  }, [taskId, item.id, dispatch]);
+
+  return (
+    <View style={styles.stepRow}>
+      <Checkbox
+        color={colors.accent}
+        value={item.checked}
+        onValueChange={handleToggle}
+      />
+
+      {isEditing ? (
+        <TextInput
+          value={localText}
+          onChangeText={setLocalText}
+          onBlur={handleBlur}
+          autoFocus
+          style={styles.input}
+          placeholder="Edit step..."
+          placeholderTextColor={colors.textSecondary}
+        />
+      ) : (
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={() => setIsEditing(true)}
+        >
+          <Text
+            style={[
+              styles.stepText,
+              item.checked && { textDecorationLine: "line-through" },
+            ]}
+          >
+            {item.title}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      <Ionicons
+        name="ellipsis-vertical"
+        size={18}
+        color={colors.textSecondary}
+      />
+    </View>
+  );
+};
 
 export default function TaskDetails() {
   const route = useRoute<any>();
@@ -25,6 +104,8 @@ export default function TaskDetails() {
     state.tasks.tasks.find((t) => t.id === taskId)
   );
 
+  console.info(task, "check_task");
+
   if (!task) {
     return (
       <View style={styles.container}>
@@ -33,11 +114,15 @@ export default function TaskDetails() {
     );
   }
 
-  const [steps, setSteps] = useState(task.steps || []);
+  // ✅ Memoized steps array prevents unnecessary re-renders
+  const steps = task.steps || [];
 
-  React.useEffect(() => {
-    setSteps(task.steps || []);
-  }, [task.steps]);
+  const renderItem = useCallback(
+    ({ item }: { item: Step }) => (
+      <StepRow key={item.id} item={item} taskId={taskId} dispatch={dispatch} />
+    ),
+    [dispatch, taskId]
+  );
 
   return (
     <View style={styles.container}>
@@ -55,33 +140,29 @@ export default function TaskDetails() {
         <Text style={styles.mainTitle}>{task.title}</Text>
         <Ionicons name="star-outline" size={20} color={colors.accent} />
       </View>
-      {/* Steps */}
+
+      {/* Steps List */}
       <FlatList
         data={steps}
-        keyExtractor={(item) => item.id.toString()} // ensure id is string
-        renderItem={({ item }) => (
-          <View style={styles.stepRow}>
-            <Checkbox color={colors.accent} value={item.checked} />
-            <Text style={styles.stepText}>{item.title}</Text>
-            <Ionicons
-              name="ellipsis-vertical"
-              size={18}
-              color={colors.textSecondary}
-            />
-          </View>
-        )}
+        keyExtractor={(item) => {
+          console.log(item, "check_items");
+          return item.id.toString();
+        }}
+        renderItem={renderItem}
+        extraData={task.steps}
+        removeClippedSubviews={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         ListFooterComponent={
-          <View style={styles.nextStepContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                dispatch(addStep({ taskId }));
-              }}
-            >
-              <Text style={styles.nextStepText}>+ Next step</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.nextStepContainer}
+            onPress={() => dispatch(addStep({ taskId }))}
+          >
+            <Text style={styles.nextStepText}>+ Next step</Text>
+          </TouchableOpacity>
         }
       />
+
       {/* Options */}
       <View style={styles.options}>
         <TouchableOpacity style={styles.optionRow}>
@@ -102,6 +183,7 @@ export default function TaskDetails() {
           <Text style={styles.optionText}>Add due date</Text>
         </TouchableOpacity>
       </View>
+
       {/* Footer */}
       <Text style={styles.footer}>Created on Wed, 12 Mar</Text>
     </View>
@@ -165,6 +247,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     color: colors.textPrimary,
+    flex: 1,
+    marginLeft: 10,
   },
   options: {
     flex: 2,
