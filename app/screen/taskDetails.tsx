@@ -517,7 +517,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   options: {
-    flex: 2,
     borderTopWidth: 1,
     borderTopColor: colors.textSecondary,
     marginTop: 20,

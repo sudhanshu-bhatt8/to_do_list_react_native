@@ -148,7 +148,9 @@ const tasksSlice = createSlice({
       // Remove from the old task
       task.steps = task.steps.filter((s) => s.id !== stepId);
     },
-
+    deleteTask(state, action) {
+      state.tasks = state.tasks.filter((task) => task.id !== action.payload);
+    },
     addReminder: (
       state,
       action: PayloadAction<{ taskId: string; remindAt: number }>
@@ -171,5 +173,6 @@ export const {
   deleteStep,
   editTaskTitle,
   addReminder,
+  deleteTask,
 } = tasksSlice.actions;
 export default tasksSlice.reducer;

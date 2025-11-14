@@ -1,6 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import Checkbox from "expo-checkbox";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import colors from "../style/colors";
 
 interface TaskItemProps {
   title: string;
@@ -12,6 +14,7 @@ interface TaskItemProps {
   onCheckboxClick?: () => void;
   checked?: boolean;
   onOpenDetails?: () => void;
+  onDelete: () => void;
 }
 
 export default function TaskItem({
@@ -24,6 +27,7 @@ export default function TaskItem({
   onCheckboxClick,
   checked,
   onOpenDetails,
+  onDelete,
 }: TaskItemProps) {
   return (
     <TouchableOpacity
@@ -62,16 +66,28 @@ export default function TaskItem({
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={onHighlight} style={styles.highlightBtn}>
-        <Text
-          style={[
-            styles.highlightText,
-            important && !checked ? { color: "#f4c542" } : { color: "#888" },
-          ]}
-        >
-          {important && !checked ? "⭐" : "☆"}
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.actionsRow}>
+        {/* STAR BUTTON */}
+        <TouchableOpacity onPress={onHighlight} style={styles.highlightBtn}>
+          <Text
+            style={[
+              styles.highlightText,
+              important && !checked ? { color: "#f4c542" } : { color: "#888" },
+            ]}
+          >
+            {important && !checked ? "⭐" : "☆"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* DELETE BUTTON */}
+        <TouchableOpacity onPress={onDelete} style={styles.deleteBtn}>
+          <Ionicons
+            name="trash-outline"
+            size={20}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -115,5 +131,19 @@ const styles = StyleSheet.create({
   },
   highlightText: {
     fontSize: 18,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  deleteBtn: {
+    marginLeft: 12,
+    padding: 4,
+  },
+
+  deleteText: {
+    fontSize: 18,
+    color: "#888", // or colors.textSecondary
   },
 });

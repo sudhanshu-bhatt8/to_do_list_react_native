@@ -16,6 +16,7 @@ import { RootStackParamList } from "../(tabs)";
 import type { RootState } from "../../store";
 import {
   addTask,
+  deleteTask,
   toggleCheckbox,
   toggleHighlight,
 } from "../../store/tasksSlice";
@@ -65,6 +66,10 @@ export default function TasksScreen() {
     navigation.navigate("TaskDetails", { taskId: id });
   };
 
+  const handleDeleteTask = (id: string) => {
+    dispatch(deleteTask(id));
+  };
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior="height">
       <Text style={styles.header}>Tasks</Text>
@@ -83,6 +88,7 @@ export default function TasksScreen() {
             onCheckboxClick={() => handleCheckboxTask(item.id)}
             checked={item.checkbox}
             onOpenDetails={() => openTaskDetails(item.id)}
+            onDelete={() => handleDeleteTask(item.id)}
           />
         )}
         contentContainerStyle={{ paddingBottom: 100 }}
