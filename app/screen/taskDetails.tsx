@@ -1,4 +1,6 @@
 // TaskDetails.tsx
+import { askNotificationPermission } from "@/constants/notification";
+import { scheduleReminder } from "@/constants/notificationService";
 import { RootState } from "@/store";
 import {
   addStep,
@@ -14,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import Checkbox from "expo-checkbox";
 import { useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   ListRenderItem,
@@ -33,6 +35,12 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import type { Dispatch } from "redux";
 import colors from "../style/colors";
+
+type Props = {
+  task: { title: string };
+  scheduleReminder: (when: number, text: string) => Promise<void>;
+  askNotificationPermission: () => Promise<boolean>;
+};
 
 /** Types */
 type Step = {
@@ -152,6 +160,13 @@ export default function TaskDetails() {
   const { taskId } = route.params as { taskId: string };
   const dispatch = useDispatch();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [showReminderPopup, setShowReminderPopup] = useState(false);
+  const [reminderMessage, setReminderMessage] = useState("");
+  const [now, setNow] = useState<number>(() => Date.now());
+  const [selected, setSelected] = useState<{
+    type: string;
+    time: number;
+  } | null>(null);
 
   const task = useSelector((state: RootState) =>
     state.tasks.tasks.find((t) => t.id === taskId)
@@ -175,6 +190,56 @@ export default function TaskDetails() {
   useEffect(() => {
     setLocalTitle(task.title);
   }, [task.title]);
+
+  const optionTimes = useMemo(() => {
+    const base = now;
+    return {
+      later_today: base + 2 * 60 * 60 * 1000, // 2 hours
+      tomorrow: base + 24 * 60 * 60 * 1000, // 24 hours
+      next_week: base + 7 * 24 * 60 * 60 * 1000, // 7 days
+    };
+  }, [now]);
+
+  function formatTime(epochMs: number) {
+    const d = new Date(epochMs);
+    // locale-sensitive short time (e.g. 3:42 PM)
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(d);
+  }
+
+  function formatRelative(fromNowMs: number) {
+    const diff = Math.max(0, fromNowMs - now);
+    const totalSeconds = Math.floor(diff / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    if (hours > 0) return `in ${hours}h ${minutes}m`;
+    if (minutes > 0) return `in ${minutes}m`;
+    return "now";
+  }
+
+  const handleReminderSelect = async (
+    type: "later_today" | "tomorrow" | "next_week"
+  ) => {
+    const granted = await askNotificationPermission();
+    if (!granted) {
+      alert("Please enable notifications to use reminders");
+      return;
+    }
+
+    // compute target time at the moment of click:
+    let remindAt = Date.now();
+    if (type === "later_today") remindAt += 2 * 60 * 60 * 1000; // 2 hours
+    if (type === "tomorrow") remindAt += 24 * 60 * 60 * 1000;
+    if (type === "next_week") remindAt += 7 * 24 * 60 * 60 * 1000;
+
+    // persist chosen selection in UI
+    setSelected({ type, time: remindAt });
+
+    // schedule the actual reminder
+    await scheduleReminder(remindAt, `Reminder: ${task.title}`);
+  };
 
   return (
     <View style={styles.container}>
@@ -266,16 +331,102 @@ export default function TaskDetails() {
         }
       />
 
+      {reminderMessage ? (
+        <View style={{ position: "absolute", bottom: 80, left: 20, right: 20 }}>
+          <Text
+            style={{
+              backgroundColor: colors.card,
+              padding: 14,
+              borderRadius: 10,
+              color: "#fff",
+              textAlign: "center",
+              fontSize: 16,
+            }}
+          >
+            {reminderMessage}
+          </Text>
+        </View>
+      ) : null}
+
       {/* Options */}
       <View style={styles.options}>
-        <TouchableOpacity style={styles.optionRow}>
-          <Ionicons
-            name="notifications-outline"
-            size={20}
-            color={colors.textPrimary}
-          />
-          <Text style={styles.optionText}>Remind me</Text>
-        </TouchableOpacity>
+        <Menu>
+          <MenuTrigger
+            customStyles={{
+              TriggerTouchableComponent: TouchableOpacity,
+              triggerWrapper: { flexDirection: "row", alignItems: "center" },
+            }}
+          >
+            <View style={styles.optionRow}>
+              <Ionicons
+                name="notifications-outline"
+                size={20}
+                color={colors.textPrimary}
+              />
+              <Text style={styles.optionText}>Remind me</Text>
+            </View>
+          </MenuTrigger>
+          <MenuOptions
+            customStyles={{ optionsContainer: styles.menuContainer }}
+          >
+            {/* LATER TODAY */}
+            <MenuOption onSelect={() => handleReminderSelect("later_today")}>
+              <View style={styles.menuRow}>
+                <Ionicons
+                  name="time-outline"
+                  size={18}
+                  color={colors.textPrimary}
+                  style={styles.menuIcon}
+                />
+                <View>
+                  <Text style={styles.menuLabel}>Later today</Text>
+                  <Text style={styles.menuSubLabel}>
+                    {formatTime(optionTimes.later_today)} ·{" "}
+                    {formatRelative(optionTimes.later_today)}
+                  </Text>
+                </View>
+              </View>
+            </MenuOption>
+
+            {/* TOMORROW */}
+            <MenuOption onSelect={() => handleReminderSelect("tomorrow")}>
+              <View style={styles.menuRow}>
+                <Ionicons
+                  name="sunny-outline"
+                  size={18}
+                  color={colors.textPrimary}
+                  style={styles.menuIcon}
+                />
+                <View>
+                  <Text style={styles.menuLabel}>Tomorrow</Text>
+                  <Text style={styles.menuSubLabel}>
+                    {formatTime(optionTimes.tomorrow)} ·{" "}
+                    {formatRelative(optionTimes.tomorrow)}
+                  </Text>
+                </View>
+              </View>
+            </MenuOption>
+
+            {/* NEXT WEEK */}
+            <MenuOption onSelect={() => handleReminderSelect("next_week")}>
+              <View style={styles.menuRow}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color={colors.textPrimary}
+                  style={styles.menuIcon}
+                />
+                <View>
+                  <Text style={styles.menuLabel}>Next week</Text>
+                  <Text style={styles.menuSubLabel}>
+                    {formatTime(optionTimes.next_week)} ·{" "}
+                    {formatRelative(optionTimes.next_week)}
+                  </Text>
+                </View>
+              </View>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
 
         <TouchableOpacity style={styles.optionRow}>
           <Ionicons
@@ -387,5 +538,37 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     marginTop: 30,
+  },
+  menuContainer: {
+    backgroundColor: colors.card,
+    padding: 10,
+    borderRadius: 8,
+    width: 220,
+    marginTop: -40,
+    zIndex: 9999,
+    elevation: 20,
+  },
+
+  menuRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+
+  menuIcon: {
+    marginRight: 10,
+    color: colors.textPrimary, // white
+  },
+
+  menuLabel: {
+    color: colors.textPrimary, // white
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  menuSubLabel: {
+    color: colors.textSecondary, // #999
+    fontSize: 12,
+    marginTop: 2,
   },
 });

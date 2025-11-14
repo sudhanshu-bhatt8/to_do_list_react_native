@@ -13,6 +13,7 @@ type Task = {
   highlight?: boolean;
   checkbox?: boolean;
   steps?: Step[];
+  remindAt?: number;
 };
 
 type TasksState = {
@@ -147,9 +148,18 @@ const tasksSlice = createSlice({
       // Remove from the old task
       task.steps = task.steps.filter((s) => s.id !== stepId);
     },
+
+    addReminder: (
+      state,
+      action: PayloadAction<{ taskId: string; remindAt: number }>
+    ) => {
+      const task = state.tasks.find((t) => t.id === action.payload.taskId);
+      if (task) {
+        task.remindAt = action.payload.remindAt; // store timestamp
+      }
+    },
   },
 });
-
 export const {
   addTask,
   toggleHighlight,
@@ -160,5 +170,6 @@ export const {
   promoteStepToTask,
   deleteStep,
   editTaskTitle,
+  addReminder,
 } = tasksSlice.actions;
 export default tasksSlice.reducer;
