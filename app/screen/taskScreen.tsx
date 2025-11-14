@@ -70,29 +70,47 @@ export default function TasksScreen() {
     dispatch(deleteTask(id));
   };
 
+  const sortedTasks = [...tasks].sort((a, b) => {
+    // highlighted tasks first
+    if (a.highlight && !b.highlight) return -1;
+    if (!a.highlight && b.highlight) return 1;
+
+    // otherwise keep original order (sort by ID or leave 0)
+    return 0;
+  });
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior="height">
       <Text style={styles.header}>Tasks</Text>
 
-      <FlatList
-        data={tasks}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TaskItem
-            title={item.title}
-            date={item.date}
-            selected={selectedTaskId === item.id}
-            important={item.highlight}
-            onPress={() => handleSelectTask(item.id)}
-            onHighlight={() => handleHighlightTask(item.id)}
-            onCheckboxClick={() => handleCheckboxTask(item.id)}
-            checked={item.checkbox}
-            onOpenDetails={() => openTaskDetails(item.id)}
-            onDelete={() => handleDeleteTask(item.id)}
-          />
-        )}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+      {tasks.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>You have no tasks yet.</Text>
+          <Text style={styles.emptySubText}>
+            Tap the + button to add your first task!
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={sortedTasks}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TaskItem
+              title={item.title}
+              date={item.date}
+              selected={selectedTaskId === item.id}
+              important={item.highlight}
+              onPress={() => handleSelectTask(item.id)}
+              onHighlight={() => handleHighlightTask(item.id)}
+              onCheckboxClick={() => handleCheckboxTask(item.id)}
+              checked={item.checkbox}
+              onOpenDetails={() => openTaskDetails(item.id)}
+              onDelete={() => handleDeleteTask(item.id)}
+            />
+          )}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      )}
 
       {showInput ? (
         <View style={styles.inputContainer}>
@@ -157,5 +175,21 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "700",
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 40,
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#999",
+    marginBottom: 5,
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: "#bbb",
   },
 });

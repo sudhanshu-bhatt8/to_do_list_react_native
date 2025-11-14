@@ -20,23 +20,18 @@ type TasksState = {
   tasks: Task[];
 };
 
+// ❗ No localStorage here — React Native does not support it!
 const initialState: TasksState = {
-  tasks: [
-    {
-      id: "1",
-      title: "Complete UI design",
-      date: "Today",
-      highlight: false,
-      checkbox: false,
-      steps: [{ id: 1, title: "Step 1", checked: true }],
-    },
-  ],
+  tasks: [], // will be loaded from AsyncStorage in App.tsx
 };
 
 const tasksSlice = createSlice({
   name: "tasks",
   initialState,
   reducers: {
+    setInitialTasks: (state, action: PayloadAction<Task[]>) => {
+      state.tasks = action.payload;
+    },
     addTask: (state, action: PayloadAction<{ title: string }>) => {
       const id = String(state.tasks.length + 1);
       state.tasks.push({
@@ -174,5 +169,6 @@ export const {
   editTaskTitle,
   addReminder,
   deleteTask,
+  setInitialTasks,
 } = tasksSlice.actions;
 export default tasksSlice.reducer;
