@@ -38,8 +38,14 @@ export default function TaskItem({
       ]}
     >
       {/* when clicked here it should open a new page  */}
-      <View
-        style={{ flex: 1, gap: 2, flexDirection: "row", alignItems: "center" }}
+      <TouchableOpacity
+        style={{
+          flex: 1,
+          gap: 2,
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+        onPress={onOpenDetails}
       >
         <TouchableOpacity onPress={onCheckboxClick}>
           <Checkbox
@@ -50,13 +56,16 @@ export default function TaskItem({
           />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onOpenDetails}>
+        <TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text
               style={[
                 styles.title,
                 important && { color: "#f4c542" },
-                checked && { textDecorationLine: "line-through", opacity: 0.6 },
+                checked && {
+                  textDecorationLine: "line-through",
+                  opacity: 0.6,
+                },
               ]}
             >
               {title}
@@ -64,7 +73,7 @@ export default function TaskItem({
             {date && <Text style={styles.date}>{date}</Text>}
           </View>
         </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
 
       <View style={styles.actionsRow}>
         {/* STAR BUTTON */}
