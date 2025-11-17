@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStackParamList } from "../(tabs)";
 import type { RootState } from "../../store";
@@ -80,57 +81,59 @@ export default function TasksScreen() {
   });
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="height">
-      <Text style={styles.header}>Tasks</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAvoidingView style={styles.container} behavior="height">
+        <Text style={styles.header}>Tasks</Text>
 
-      {tasks.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>You have no tasks yet.</Text>
-          <Text style={styles.emptySubText}>
-            Tap the + button to add your first task!
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={sortedTasks}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TaskItem
-              title={item.title}
-              date={item.date}
-              selected={selectedTaskId === item.id}
-              important={item.highlight}
-              onPress={() => handleSelectTask(item.id)}
-              onHighlight={() => handleHighlightTask(item.id)}
-              onCheckboxClick={() => handleCheckboxTask(item.id)}
-              checked={item.checkbox}
-              onOpenDetails={() => openTaskDetails(item.id)}
-              onDelete={() => handleDeleteTask(item.id)}
-            />
-          )}
-          contentContainerStyle={{ paddingBottom: 100 }}
-        />
-      )}
-
-      {showInput ? (
-        <View style={styles.inputContainer}>
-          <TextInput
-            ref={inputRef}
-            style={styles.textInput}
-            placeholder="Add a task"
-            value={task}
-            onChangeText={setTask}
-            returnKeyType="done"
-            onSubmitEditing={handleSend}
+        {tasks.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>You have no tasks yet.</Text>
+            <Text style={styles.emptySubText}>
+              Tap the + button to add your first task!
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={sortedTasks}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TaskItem
+                title={item.title}
+                date={item.date}
+                selected={selectedTaskId === item.id}
+                important={item.highlight}
+                onPress={() => handleSelectTask(item.id)}
+                onHighlight={() => handleHighlightTask(item.id)}
+                onCheckboxClick={() => handleCheckboxTask(item.id)}
+                checked={item.checkbox}
+                onOpenDetails={() => openTaskDetails(item.id)}
+                onDelete={() => handleDeleteTask(item.id)}
+              />
+            )}
+            contentContainerStyle={{ paddingBottom: 100 }}
           />
-          <TouchableOpacity onPress={handleSend} style={styles.sendBtn}>
-            <Text style={styles.sendText}>➤</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FloatingButton onPress={openKeyboard} />
-      )}
-    </KeyboardAvoidingView>
+        )}
+
+        {showInput ? (
+          <View style={styles.inputContainer}>
+            <TextInput
+              ref={inputRef}
+              style={styles.textInput}
+              placeholder="Add a task"
+              value={task}
+              onChangeText={setTask}
+              returnKeyType="done"
+              onSubmitEditing={handleSend}
+            />
+            <TouchableOpacity onPress={handleSend} style={styles.sendBtn}>
+              <Text style={styles.sendText}>➤</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FloatingButton onPress={openKeyboard} />
+        )}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

@@ -56,23 +56,21 @@ export default function TaskItem({
           />
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={[
-                styles.title,
-                important && { color: "#f4c542" },
-                checked && {
-                  textDecorationLine: "line-through",
-                  opacity: 0.6,
-                },
-              ]}
-            >
-              {title}
-            </Text>
-            {date && <Text style={styles.date}>{date}</Text>}
-          </View>
-        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[
+              styles.title,
+              important && { color: "#f4c542" },
+              checked && {
+                textDecorationLine: "line-through",
+                opacity: 0.6,
+              },
+            ]}
+          >
+            {title}
+          </Text>
+          {date && <Text style={styles.date}>{date}</Text>}
+        </View>
       </TouchableOpacity>
 
       <View style={styles.actionsRow}>
