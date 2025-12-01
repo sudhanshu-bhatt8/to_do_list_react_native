@@ -1,6 +1,9 @@
 // TaskDetails.tsx
 import { askNotificationPermission } from "@/constants/notification";
-import { scheduleReminder } from "@/constants/notificationService";
+import {
+  scheduleDueDate,
+  scheduleReminder,
+} from "@/constants/notificationService";
 import { RootState } from "@/store";
 import {
   addStep,
@@ -35,6 +38,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import type { Dispatch } from "redux";
+import AddDueDateMenu from "../components/AddDueDateMenu";
 import colors from "../style/colors";
 
 type Props = {
@@ -168,6 +172,10 @@ export default function TaskDetails() {
     type: string;
     time: number;
   } | null>(null);
+  const [selecteddUEdATE, setSelectedDueDate] = useState<{
+    type: string;
+    time: number;
+  } | null>(null);
 
   const task = useSelector((state: RootState) =>
     state.tasks.tasks.find((t) => t.id === taskId)
@@ -240,6 +248,65 @@ export default function TaskDetails() {
 
     // schedule the actual reminder
     await scheduleReminder(remindAt, `Reminder: ${task.title}`);
+  };
+
+  // handle due date
+
+  const handleDueDate = async (
+    type: "today" | "tomorrow" | "next_week" | "pick_date",
+    pickedDate?: Date
+  ) => {
+    let dueAt = Date.now();
+
+    if (type === "today") {
+      // set to today at 23:59
+      const now = new Date();
+      dueAt = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        23,
+        59
+      ).getTime();
+    }
+
+    if (type === "tomorrow") {
+      const now = new Date();
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        23,
+        59
+      );
+      dueAt = tomorrow.getTime();
+    }
+
+    if (type === "next_week") {
+      const now = new Date();
+      const nextWeek = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 7,
+        23,
+        59
+      );
+      dueAt = nextWeek.getTime();
+    }
+
+    if (type === "pick_date") {
+      if (!pickedDate) {
+        alert("No date selected");
+        return;
+      }
+      dueAt = pickedDate.getTime();
+    }
+
+    // store selected due date in UI
+    setSelectedDueDate({ type, time: dueAt });
+
+    // schedule due date notification
+    await scheduleDueDate(dueAt, `Due date: ${task.title}`);
   };
 
   return (
@@ -432,14 +499,20 @@ export default function TaskDetails() {
             </MenuOptions>
           </Menu>
 
-          <TouchableOpacity style={styles.optionRow}>
-            <Ionicons
+          {/* <TouchableOpacity style={styles.optionRow}>
+            <Ioniconss
               name="calendar-outline"
               size={20}
               color={colors.textPrimary}
             />
             <Text style={styles.optionText}>Add due date</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
+
+          <AddDueDateMenu
+            onSelect={(v) => handleDueDate(v)}
+            colors={colors}
+            styles={styles}
+          />
         </View>
 
         {/* Footer */}

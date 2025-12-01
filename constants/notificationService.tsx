@@ -13,3 +13,17 @@ export async function scheduleReminder(timestamp: number, message: string) {
     },
   });
 }
+
+export async function scheduleDueDate(timestamp: number, message: string) {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Due Date",
+      body: message,
+      sound: true,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(timestamp),
+    },
+  });
+}
