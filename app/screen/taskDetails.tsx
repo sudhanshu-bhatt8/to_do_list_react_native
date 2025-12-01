@@ -32,6 +32,7 @@ import {
   MenuOptions,
   MenuTrigger,
 } from "react-native-popup-menu";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import type { Dispatch } from "redux";
 import colors from "../style/colors";
@@ -242,205 +243,209 @@ export default function TaskDetails() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Tasks</Text>
-      </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Tasks</Text>
+        </View>
 
-      {/* Main Task */}
-      <View style={styles.mainTask}>
-        <TouchableOpacity onPress={() => dispatch(toggleCheckbox(taskId))}>
-          <Checkbox
-            color={colors.accent}
-            value={!!task.checkbox}
-            onValueChange={() => dispatch(toggleCheckbox(taskId))}
-          />
-        </TouchableOpacity>
+        {/* Main Task */}
+        <View style={styles.mainTask}>
+          <TouchableOpacity onPress={() => dispatch(toggleCheckbox(taskId))}>
+            <Checkbox
+              color={colors.accent}
+              value={!!task.checkbox}
+              onValueChange={() => dispatch(toggleCheckbox(taskId))}
+            />
+          </TouchableOpacity>
 
-        {isEditingTitle ? (
-          <TextInput
-            value={localTitle}
-            onChangeText={setLocalTitle}
-            onBlur={() => {
-              const trimmed = localTitle.trim();
-              if (trimmed && trimmed !== task.title) {
-                dispatch(editTaskTitle({ taskId, title: trimmed }));
-              }
-              setIsEditingTitle(false);
-            }}
-            autoFocus
-            style={[
-              styles.mainTitle,
-              {
-                backgroundColor: colors.card,
-                paddingHorizontal: 8,
-                borderRadius: 6,
-              },
-            ]}
-            placeholder="Edit task title..."
-            placeholderTextColor={colors.textSecondary}
-          />
-        ) : (
-          <TouchableOpacity
-            onPress={() => setIsEditingTitle(true)}
-            style={{ flex: 1 }}
-          >
-            <Text
+          {isEditingTitle ? (
+            <TextInput
+              value={localTitle}
+              onChangeText={setLocalTitle}
+              onBlur={() => {
+                const trimmed = localTitle.trim();
+                if (trimmed && trimmed !== task.title) {
+                  dispatch(editTaskTitle({ taskId, title: trimmed }));
+                }
+                setIsEditingTitle(false);
+              }}
+              autoFocus
               style={[
                 styles.mainTitle,
-                task.checkbox && {
-                  textDecorationLine: "line-through",
-                  opacity: 0.6,
+                {
+                  backgroundColor: colors.card,
+                  paddingHorizontal: 8,
+                  borderRadius: 6,
                 },
               ]}
+              placeholder="Edit task title..."
+              placeholderTextColor={colors.textSecondary}
+            />
+          ) : (
+            <TouchableOpacity
+              onPress={() => setIsEditingTitle(true)}
+              style={{ flex: 1 }}
             >
-              {task.title}
-            </Text>
+              <Text
+                style={[
+                  styles.mainTitle,
+                  task.checkbox && {
+                    textDecorationLine: "line-through",
+                    opacity: 0.6,
+                  },
+                ]}
+              >
+                {task.title}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity onPress={() => dispatch(toggleHighlight(taskId))}>
+            <Ionicons
+              name={task.highlight ? "star" : "star-outline"}
+              size={20}
+              color={task.highlight ? colors.accent : colors.textSecondary}
+            />
           </TouchableOpacity>
-        )}
-
-        <TouchableOpacity onPress={() => dispatch(toggleHighlight(taskId))}>
-          <Ionicons
-            name={task.highlight ? "star" : "star-outline"}
-            size={20}
-            color={task.highlight ? colors.accent : colors.textSecondary}
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Steps List */}
-      <FlatList
-        data={steps}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        extraData={task.steps}
-        removeClippedSubviews={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        ListFooterComponent={
-          <TouchableOpacity
-            style={styles.nextStepContainer}
-            onPress={() => dispatch(addStep({ taskId }))}
-          >
-            <Text style={styles.nextStepText}>+ Next step</Text>
-          </TouchableOpacity>
-        }
-      />
-
-      {reminderMessage ? (
-        <View style={{ position: "absolute", bottom: 80, left: 20, right: 20 }}>
-          <Text
-            style={{
-              backgroundColor: colors.card,
-              padding: 14,
-              borderRadius: 10,
-              color: "#fff",
-              textAlign: "center",
-              fontSize: 16,
-            }}
-          >
-            {reminderMessage}
-          </Text>
         </View>
-      ) : null}
 
-      {/* Options */}
-      <View style={styles.options}>
-        <Menu>
-          <MenuTrigger
-            customStyles={{
-              TriggerTouchableComponent: TouchableOpacity,
-              triggerWrapper: { flexDirection: "row", alignItems: "center" },
-            }}
+        {/* Steps List */}
+        <FlatList
+          data={steps}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          extraData={task.steps}
+          removeClippedSubviews={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          ListFooterComponent={
+            <TouchableOpacity
+              style={styles.nextStepContainer}
+              onPress={() => dispatch(addStep({ taskId }))}
+            >
+              <Text style={styles.nextStepText}>+ Next step</Text>
+            </TouchableOpacity>
+          }
+        />
+
+        {reminderMessage ? (
+          <View
+            style={{ position: "absolute", bottom: 80, left: 20, right: 20 }}
           >
-            <View style={styles.optionRow}>
-              <Ionicons
-                name="notifications-outline"
-                size={20}
-                color={colors.textPrimary}
-              />
-              <Text style={styles.optionText}>Remind me</Text>
-            </View>
-          </MenuTrigger>
-          <MenuOptions
-            customStyles={{ optionsContainer: styles.menuContainer }}
-          >
-            {/* LATER TODAY */}
-            <MenuOption onSelect={() => handleReminderSelect("later_today")}>
-              <View style={styles.menuRow}>
-                <Ionicons
-                  name="time-outline"
-                  size={18}
-                  color={colors.textPrimary}
-                  style={styles.menuIcon}
-                />
-                <View>
-                  <Text style={styles.menuLabel}>Later today</Text>
-                  <Text style={styles.menuSubLabel}>
-                    {formatTime(optionTimes.later_today)} ·{" "}
-                    {formatRelative(optionTimes.later_today)}
-                  </Text>
-                </View>
-              </View>
-            </MenuOption>
+            <Text
+              style={{
+                backgroundColor: colors.card,
+                padding: 14,
+                borderRadius: 10,
+                color: "#fff",
+                textAlign: "center",
+                fontSize: 16,
+              }}
+            >
+              {reminderMessage}
+            </Text>
+          </View>
+        ) : null}
 
-            {/* TOMORROW */}
-            <MenuOption onSelect={() => handleReminderSelect("tomorrow")}>
-              <View style={styles.menuRow}>
+        {/* Options */}
+        <View style={styles.options}>
+          <Menu>
+            <MenuTrigger
+              customStyles={{
+                TriggerTouchableComponent: TouchableOpacity,
+                triggerWrapper: { flexDirection: "row", alignItems: "center" },
+              }}
+            >
+              <View style={styles.optionRow}>
                 <Ionicons
-                  name="sunny-outline"
-                  size={18}
+                  name="notifications-outline"
+                  size={20}
                   color={colors.textPrimary}
-                  style={styles.menuIcon}
                 />
-                <View>
-                  <Text style={styles.menuLabel}>Tomorrow</Text>
-                  <Text style={styles.menuSubLabel}>
-                    {formatTime(optionTimes.tomorrow)} ·{" "}
-                    {formatRelative(optionTimes.tomorrow)}
-                  </Text>
-                </View>
+                <Text style={styles.optionText}>Remind me</Text>
               </View>
-            </MenuOption>
-
-            {/* NEXT WEEK */}
-            <MenuOption onSelect={() => handleReminderSelect("next_week")}>
-              <View style={styles.menuRow}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={18}
-                  color={colors.textPrimary}
-                  style={styles.menuIcon}
-                />
-                <View>
-                  <Text style={styles.menuLabel}>Next week</Text>
-                  <Text style={styles.menuSubLabel}>
-                    {formatTime(optionTimes.next_week)} ·{" "}
-                    {formatRelative(optionTimes.next_week)}
-                  </Text>
+            </MenuTrigger>
+            <MenuOptions
+              customStyles={{ optionsContainer: styles.menuContainer }}
+            >
+              {/* LATER TODAY */}
+              <MenuOption onSelect={() => handleReminderSelect("later_today")}>
+                <View style={styles.menuRow}>
+                  <Ionicons
+                    name="time-outline"
+                    size={18}
+                    color={colors.textPrimary}
+                    style={styles.menuIcon}
+                  />
+                  <View>
+                    <Text style={styles.menuLabel}>Later today</Text>
+                    <Text style={styles.menuSubLabel}>
+                      {formatTime(optionTimes.later_today)} ·{" "}
+                      {formatRelative(optionTimes.later_today)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </MenuOption>
-          </MenuOptions>
-        </Menu>
+              </MenuOption>
 
-        <TouchableOpacity style={styles.optionRow}>
-          <Ionicons
-            name="calendar-outline"
-            size={20}
-            color={colors.textPrimary}
-          />
-          <Text style={styles.optionText}>Add due date</Text>
-        </TouchableOpacity>
+              {/* TOMORROW */}
+              <MenuOption onSelect={() => handleReminderSelect("tomorrow")}>
+                <View style={styles.menuRow}>
+                  <Ionicons
+                    name="sunny-outline"
+                    size={18}
+                    color={colors.textPrimary}
+                    style={styles.menuIcon}
+                  />
+                  <View>
+                    <Text style={styles.menuLabel}>Tomorrow</Text>
+                    <Text style={styles.menuSubLabel}>
+                      {formatTime(optionTimes.tomorrow)} ·{" "}
+                      {formatRelative(optionTimes.tomorrow)}
+                    </Text>
+                  </View>
+                </View>
+              </MenuOption>
+
+              {/* NEXT WEEK */}
+              <MenuOption onSelect={() => handleReminderSelect("next_week")}>
+                <View style={styles.menuRow}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={18}
+                    color={colors.textPrimary}
+                    style={styles.menuIcon}
+                  />
+                  <View>
+                    <Text style={styles.menuLabel}>Next week</Text>
+                    <Text style={styles.menuSubLabel}>
+                      {formatTime(optionTimes.next_week)} ·{" "}
+                      {formatRelative(optionTimes.next_week)}
+                    </Text>
+                  </View>
+                </View>
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
+
+          <TouchableOpacity style={styles.optionRow}>
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={colors.textPrimary}
+            />
+            <Text style={styles.optionText}>Add due date</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Footer */}
+        <Text style={styles.footer}>Created on Wed, 12 Mar</Text>
       </View>
-
-      {/* Footer */}
-      <Text style={styles.footer}>Created on Wed, 12 Mar</Text>
-    </View>
+    </SafeAreaView>
   );
 }
 
