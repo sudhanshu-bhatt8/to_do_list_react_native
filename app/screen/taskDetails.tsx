@@ -6,6 +6,8 @@ import {
 } from "@/constants/notificationService";
 import { RootState } from "@/store";
 import {
+  addDueDate,
+  addReminder,
   addStep,
   deleteStep,
   editStepTitle,
@@ -16,6 +18,7 @@ import {
   toggleStepCheck,
 } from "@/store/tasksSlice";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRoute } from "@react-navigation/native";
 import Checkbox from "expo-checkbox";
 import { useNavigation } from "expo-router";
@@ -165,7 +168,6 @@ export default function TaskDetails() {
   const { taskId } = route.params as { taskId: string };
   const dispatch = useDispatch();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [showReminderPopup, setShowReminderPopup] = useState(false);
   const [reminderMessage, setReminderMessage] = useState("");
   const [now, setNow] = useState<number>(() => Date.now());
   const [selected, setSelected] = useState<{
@@ -176,6 +178,8 @@ export default function TaskDetails() {
     type: string;
     time: number;
   } | null>(null);
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setDatePicker] = useState(false);
 
   const task = useSelector((state: RootState) =>
     state.tasks.tasks.find((t) => t.id === taskId)
@@ -228,6 +232,13 @@ export default function TaskDetails() {
     return "now";
   }
 
+  // save it at store
+  const saveRemindMe = (remindAt: number) => {
+    const taskId = task.id;
+    dispatch(addReminder({ taskId, remindAt }));
+  };
+
+  // handle remine me
   const handleReminderSelect = async (
     type: "later_today" | "tomorrow" | "next_week"
   ) => {
@@ -247,11 +258,13 @@ export default function TaskDetails() {
     setSelected({ type, time: remindAt });
 
     // schedule the actual reminder
+    if (remindAt) {
+      saveRemindMe(remindAt);
+    }
     await scheduleReminder(remindAt, `Reminder: ${task.title}`);
   };
 
   // handle due date
-
   const handleDueDate = async (
     type: "today" | "tomorrow" | "next_week" | "pick_date",
     pickedDate?: Date
@@ -307,6 +320,28 @@ export default function TaskDetails() {
 
     // schedule due date notification
     await scheduleDueDate(dueAt, `Due date: ${task.title}`);
+  };
+
+  // save due date at store
+  const saveDueDate = (date: Date) => {
+    const taskId = task.id;
+    dispatch(addDueDate({ taskId, dueDate: date.getTime() })); // ✔ SERIALIZABLE
+  };
+
+  // on change trigger when date is selected
+  const onChange = (_event: any, selected?: Date) => {
+    // Android always sends selected when user picks a date.
+    // If dismissed, selected will be undefined.
+    if (selected) {
+      setDate(selected);
+      handleDueDate("pick_date", selected);
+    }
+
+    // Always close the picker on Android
+    setDatePicker(false);
+    if (selected) {
+      saveDueDate(selected);
+    }
   };
 
   return (
@@ -508,8 +543,24 @@ export default function TaskDetails() {
             <Text style={styles.optionText}>Add due date</Text>
           </TouchableOpacity> */}
 
+          {showDatePicker && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={date}
+              is24Hour={true}
+              display="default"
+              onChange={onChange}
+            />
+          )}
+
           <AddDueDateMenu
-            onSelect={(v) => handleDueDate(v)}
+            onSelect={(v) => {
+              if (v == "pick_date") {
+                setDatePicker(true);
+              } else {
+                handleDueDate(v);
+              }
+            }}
             colors={colors}
             styles={styles}
           />

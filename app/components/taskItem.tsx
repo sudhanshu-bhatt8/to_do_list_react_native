@@ -1,3 +1,4 @@
+import { Task } from "@/store/tasksSlice";
 import { Ionicons } from "@expo/vector-icons";
 import Checkbox from "expo-checkbox";
 import React from "react";
@@ -7,6 +8,8 @@ import colors from "../style/colors";
 interface TaskItemProps {
   title: string;
   date?: string;
+  mode?: string;
+  task: Task;
   selected?: boolean;
   important?: boolean;
   onPress?: () => void;
@@ -20,6 +23,8 @@ interface TaskItemProps {
 export default function TaskItem({
   title,
   date,
+  mode,
+  task,
   selected,
   important,
   onPress,
@@ -69,7 +74,27 @@ export default function TaskItem({
           >
             {title}
           </Text>
-          {date && <Text style={styles.date}>{date}</Text>}
+          {/* Show dates only when mode === "planning" */}
+          {mode === "planning" && (
+            <>
+              {task.remindAt ? (
+                <Text style={styles.date}>
+                  Remind: {new Date(task.remindAt).toLocaleString()}
+                </Text>
+              ) : null}
+
+              {task.dueDate && (
+                <Text style={styles.date}>
+                  Due: {new Date(task.dueDate).toLocaleString()}
+                </Text>
+              )}
+            </>
+          )}
+
+          {/* Fallback: show regular date when NOT in planning mode */}
+          {mode !== "planning" && date && (
+            <Text style={styles.date}>{date}</Text>
+          )}
         </View>
       </TouchableOpacity>
 

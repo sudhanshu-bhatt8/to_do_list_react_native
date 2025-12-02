@@ -6,7 +6,7 @@ type Step = {
   checked: boolean;
 };
 
-type Task = {
+export type Task = {
   id: string;
   title: string;
   date: string;
@@ -14,6 +14,7 @@ type Task = {
   checkbox?: boolean;
   steps?: Step[];
   remindAt?: number;
+  dueDate?: number;
 };
 
 type TasksState = {
@@ -155,6 +156,16 @@ const tasksSlice = createSlice({
         task.remindAt = action.payload.remindAt; // store timestamp
       }
     },
+
+    addDueDate: (
+      state,
+      action: PayloadAction<{ taskId: string; dueDate: number }>
+    ) => {
+      const task = state.tasks.find((t) => t.id === action.payload.taskId);
+      if (task) {
+        task.dueDate = action.payload.dueDate; // number is OK
+      }
+    },
   },
 });
 export const {
@@ -170,5 +181,6 @@ export const {
   addReminder,
   deleteTask,
   setInitialTasks,
+  addDueDate,
 } = tasksSlice.actions;
 export default tasksSlice.reducer;
