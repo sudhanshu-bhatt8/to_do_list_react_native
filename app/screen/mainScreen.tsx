@@ -97,10 +97,10 @@ export default function MainScreen() {
       </ScrollView>
 
       {/* New List */}
-      <TouchableOpacity style={styles.newListBtn}>
+      {/* <TouchableOpacity style={styles.newListBtn}>
         <Ionicons name="add-outline" size={22} color="#fff" />
         <Text style={styles.newListText}>New list</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }
