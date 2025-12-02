@@ -212,7 +212,11 @@ export default function TasksScreen() {
               ? "TASK"
               : mode === "important"
               ? "Important"
-              : "Planning"}
+              : mode === "planning"
+              ? "Planning"
+              : mode === "myDay"
+              ? "My Day"
+              : ""}
           </Text>
         </View>
 
