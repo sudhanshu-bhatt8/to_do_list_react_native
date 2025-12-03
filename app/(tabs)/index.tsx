@@ -14,9 +14,9 @@ export type RootStackParamList = {
 export default function HomeNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={MainScreen} />
       <Stack.Screen name="taskScreen" component={TasksScreen} />
       <Stack.Screen name="TaskDetails" component={TaskDetails} />
-      <Stack.Screen name="Home" component={MainScreen} />
       <Stack.Screen name="Planning" component={TaskDetails} />
       <Stack.Screen name="myDay" component={TaskDetails} />
     </Stack.Navigator>
