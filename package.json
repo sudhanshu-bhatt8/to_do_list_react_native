@@ -50,6 +50,7 @@
     "react-redux": "^9.2.0"
   },
   "devDependencies": {
+    "@react-native-community/cli": "^20.1.2",
     "@types/react": "~19.1.0",
     "eas-cli": "^16.27.0",
     "eslint": "^9.25.0",
