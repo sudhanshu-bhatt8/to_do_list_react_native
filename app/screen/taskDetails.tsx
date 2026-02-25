@@ -13,6 +13,8 @@ import {
   editStepTitle,
   editTaskTitle,
   promoteStepToTask,
+  RepeatType,
+  setRepeat,
   toggleCheckbox,
   toggleHighlight,
   toggleStepCheck,
@@ -42,6 +44,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import type { Dispatch } from "redux";
 import AddDueDateMenu from "../components/AddDueDateMenu";
+import AddRepeatMenu from "../components/repeate";
 import colors from "../style/colors";
 
 type Props = {
@@ -182,7 +185,7 @@ export default function TaskDetails() {
   const [showDatePicker, setDatePicker] = useState(false);
 
   const task = useSelector((state: RootState) =>
-    state.tasks.tasks.find((t) => t.id === taskId)
+    state.tasks.tasks.find((t) => t.id === taskId),
   );
 
   if (!task) {
@@ -197,7 +200,7 @@ export default function TaskDetails() {
   const [localTitle, setLocalTitle] = useState(task.title);
   const renderItem = useCallback<ListRenderItem<Step>>(
     ({ item }) => <StepRow item={item} taskId={taskId} dispatch={dispatch} />,
-    [dispatch, taskId]
+    [dispatch, taskId],
   );
 
   useEffect(() => {
@@ -240,7 +243,7 @@ export default function TaskDetails() {
 
   // handle remine me
   const handleReminderSelect = async (
-    type: "later_today" | "tomorrow" | "next_week"
+    type: "later_today" | "tomorrow" | "next_week",
   ) => {
     const granted = await askNotificationPermission();
     if (!granted) {
@@ -267,7 +270,7 @@ export default function TaskDetails() {
   // handle due date
   const handleDueDate = async (
     type: "today" | "tomorrow" | "next_week" | "pick_date",
-    pickedDate?: Date
+    pickedDate?: Date,
   ) => {
     let dueAt = Date.now();
 
@@ -279,7 +282,7 @@ export default function TaskDetails() {
         now.getMonth(),
         now.getDate(),
         23,
-        59
+        59,
       ).getTime();
     }
 
@@ -290,7 +293,7 @@ export default function TaskDetails() {
         now.getMonth(),
         now.getDate() + 1,
         23,
-        59
+        59,
       );
       dueAt = tomorrow.getTime();
     }
@@ -302,7 +305,7 @@ export default function TaskDetails() {
         now.getMonth(),
         now.getDate() + 7,
         23,
-        59
+        59,
       );
       dueAt = nextWeek.getTime();
     }
@@ -320,6 +323,15 @@ export default function TaskDetails() {
 
     // schedule due date notification
     await scheduleDueDate(dueAt, `Due date: ${task.title}`);
+  };
+
+  const handleRepeatSelect = (value: RepeatType) => {
+    dispatch(
+      setRepeat({
+        taskId: taskId,
+        repeat: value,
+      }),
+    );
   };
 
   // save due date at store
@@ -564,7 +576,15 @@ export default function TaskDetails() {
             colors={colors}
             styles={styles}
           />
+
+          <AddRepeatMenu
+            onSelect={handleRepeatSelect}
+            colors={colors}
+            styles={styles}
+          />
         </View>
+
+        {/* repeate */}
 
         {/* Footer */}
         <Text style={styles.footer}>Created on Wed, 12 Mar</Text>

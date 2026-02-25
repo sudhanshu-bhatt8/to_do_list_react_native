@@ -5,7 +5,7 @@ type Step = {
   title: string;
   checked: boolean;
 };
-
+export type RepeatType = "none" | "daily" | "weekly" | "monthly" | "yearly";
 export type Task = {
   id: string;
   title: string;
@@ -15,6 +15,10 @@ export type Task = {
   steps?: Step[];
   remindAt?: number;
   dueDate?: number;
+
+  // ✅ NEW
+  repeat?: RepeatType;
+  repeatUntil?: number; // optional end date timestamp
 };
 
 type TasksState = {
@@ -72,16 +76,42 @@ const tasksSlice = createSlice({
 
     editTaskTitle: (
       state,
-      action: PayloadAction<{ taskId: string; title: string }>
+      action: PayloadAction<{ taskId: string; title: string }>,
     ) => {
       const { taskId, title } = action.payload;
       const task = state.tasks.find((t) => t.id === taskId);
       if (task) task.title = title;
     },
 
+    setRepeat: (
+      state,
+      action: PayloadAction<{
+        taskId: string;
+        repeat: RepeatType;
+        repeatUntil?: number;
+      }>,
+    ) => {
+      const { taskId, repeat, repeatUntil } = action.payload;
+      const task = state.tasks.find((t) => t.id === taskId);
+
+      if (task) {
+        task.repeat = repeat;
+        task.repeatUntil = repeatUntil;
+      }
+    },
+
+    clearRepeat: (state, action: PayloadAction<{ taskId: string }>) => {
+      const task = state.tasks.find((t) => t.id === action.payload.taskId);
+
+      if (task) {
+        task.repeat = "none";
+        task.repeatUntil = undefined;
+      }
+    },
+
     toggleStepCheck: (
       state,
-      action: PayloadAction<{ taskId: string; stepId: number }>
+      action: PayloadAction<{ taskId: string; stepId: number }>,
     ) => {
       const task = state.tasks.find((t) => t.id === action.payload.taskId);
       if (!task || !task.steps) return;
@@ -91,7 +121,7 @@ const tasksSlice = createSlice({
 
     editStepTitle: (
       state,
-      action: PayloadAction<{ taskId: string; stepId: number; title: string }>
+      action: PayloadAction<{ taskId: string; stepId: number; title: string }>,
     ) => {
       const task = state.tasks.find((t) => t.id === action.payload.taskId);
       if (!task || !task.steps) return;
@@ -100,13 +130,13 @@ const tasksSlice = createSlice({
       task.steps = task.steps.map((s) =>
         s.id === action.payload.stepId
           ? { ...s, title: action.payload.title }
-          : s
+          : s,
       );
     },
 
     deleteStep: (
       state,
-      action: PayloadAction<{ taskId: string; stepId: number }>
+      action: PayloadAction<{ taskId: string; stepId: number }>,
     ) => {
       const { taskId, stepId } = action.payload;
       const task = state.tasks.find((t) => t.id === taskId);
@@ -119,7 +149,7 @@ const tasksSlice = createSlice({
 
     promoteStepToTask: (
       state,
-      action: PayloadAction<{ taskId: string; stepId: number }>
+      action: PayloadAction<{ taskId: string; stepId: number }>,
     ) => {
       const { taskId, stepId } = action.payload;
 
@@ -149,7 +179,7 @@ const tasksSlice = createSlice({
     },
     addReminder: (
       state,
-      action: PayloadAction<{ taskId: string; remindAt: number }>
+      action: PayloadAction<{ taskId: string; remindAt: number }>,
     ) => {
       const task = state.tasks.find((t) => t.id === action.payload.taskId);
       if (task) {
@@ -159,7 +189,7 @@ const tasksSlice = createSlice({
 
     addDueDate: (
       state,
-      action: PayloadAction<{ taskId: string; dueDate: number }>
+      action: PayloadAction<{ taskId: string; dueDate: number }>,
     ) => {
       const task = state.tasks.find((t) => t.id === action.payload.taskId);
       if (task) {
@@ -182,5 +212,7 @@ export const {
   deleteTask,
   setInitialTasks,
   addDueDate,
+  setRepeat,
+  clearRepeat,
 } = tasksSlice.actions;
 export default tasksSlice.reducer;
