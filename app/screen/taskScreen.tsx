@@ -32,6 +32,12 @@ import PlannedFilterMenu, {
 import TaskItem from "../components/taskItem";
 import colors from "../style/colors";
 
+export const getTaskDate = (task: any) => {
+  if (task.dueDate) return new Date(task.dueDate);
+  if (task.remindAt) return new Date(task.remindAt);
+  return null;
+};
+
 export default function TasksScreen() {
   const [showInput, setShowInput] = useState(false);
   const [task, setTask] = useState("");
@@ -84,7 +90,7 @@ export default function TasksScreen() {
     const startOfDay = new Date(
       now.getFullYear(),
       now.getMonth(),
-      now.getDate()
+      now.getDate(),
     );
     const endOfDay = new Date(startOfDay);
     endOfDay.setDate(startOfDay.getDate() + 1);
@@ -100,12 +106,6 @@ export default function TasksScreen() {
 
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 7);
-
-    const getTaskDate = (task: any) => {
-      if (task.dueDate) return new Date(task.dueDate);
-      if (task.remindAt) return new Date(task.remindAt);
-      return null;
-    };
 
     switch (filter) {
       case "overdue":
@@ -153,7 +153,7 @@ export default function TasksScreen() {
   const startOfToday = new Date(
     now.getFullYear(),
     now.getMonth(),
-    now.getDate()
+    now.getDate(),
   );
   const endOfToday = new Date(startOfToday);
   endOfToday.setDate(endOfToday.getDate() + 1);
@@ -211,12 +211,12 @@ export default function TasksScreen() {
             {mode === "all"
               ? "TASK"
               : mode === "important"
-              ? "Important"
-              : mode === "planning"
-              ? "Planning"
-              : mode === "myDay"
-              ? "My Day"
-              : ""}
+                ? "Important"
+                : mode === "planning"
+                  ? "Planning"
+                  : mode === "myDay"
+                    ? "My Day"
+                    : ""}
           </Text>
         </View>
 

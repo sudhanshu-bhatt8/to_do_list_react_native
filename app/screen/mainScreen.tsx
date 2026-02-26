@@ -1,4 +1,5 @@
 import { RootState } from "@/store";
+import { Task } from "@/store/tasksSlice";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -12,11 +13,32 @@ import {
 } from "react-native";
 import { useSelector } from "react-redux";
 import { RootStackParamList } from "../(tabs)";
+import { getTaskDate } from "./taskScreen";
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 type NavigationProp = StackNavigationProp<RootStackParamList>;
+
+export const isRepeatingTask = (task: Task) => {
+  return task.repeat && task.repeat !== "none";
+};
 export default function MainScreen() {
   const tasks = useSelector((state: RootState) => state.tasks.tasks);
   const imptask = tasks.filter((t) => t.highlight === true);
+  const plannedTasks = tasks.filter((task) => getTaskDate(task));
+  const today = new Date();
+  /* -------------------- My Day -------------------- */
+  const startOfDay = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const endOfDay = new Date(startOfDay);
+  endOfDay.setDate(startOfDay.getDate() + 1);
+
+  const myDayTasks = tasks.filter((task) => {
+    const d = getTaskDate(task);
+    return (d && d >= startOfDay && d < endOfDay) || isRepeatingTask(task);
+  });
+
   const menuItems: {
     label: string;
     icon: IoniconName;
@@ -29,6 +51,7 @@ export default function MainScreen() {
       icon: "sunny-outline",
       navigate: "taskScreen",
       mode: "myDay",
+      rightValue: myDayTasks.length.toString(),
     },
     {
       label: "Important",
@@ -42,6 +65,7 @@ export default function MainScreen() {
       icon: "calendar-outline",
       navigate: "taskScreen",
       mode: "planning",
+      rightValue: plannedTasks.length.toString(),
     },
     // { label: "Assigned to me", icon: "person-outline" },
     {
